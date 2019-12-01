@@ -141,7 +141,7 @@ namespace openrmf_msg_system
                 }
             };
             
-            // update the # of checklists up or down based on the add or delete
+            // update the date for the last system compliance ran
             EventHandler<MsgHandlerEventArgs> updateSystemComplianceDate = (sender, natsargs) =>
             {
                 try {
