@@ -1,3 +1,5 @@
+![.NET Core Build and Test](https://github.com/Cingulara/openrmf-msg-system/workflows/.NET%20Core%20Build%20and%20Test/badge.svg)
+
 # openrmf-msg-system
 Messaging service to respond to internal API requests to receive system and checklist listing information using a NATS Request/Reply scenario.
 * openrmf.system.update.{systemGroupId} -- update the title in the body for the Artifacts (used for quicker reading)
