@@ -13,5 +13,8 @@ namespace openrmf_msg_system.Data {
 
         // update just a single system document
         Task<bool> UpdateSystemGroup(string id, SystemGroup body);
+
+        Task<bool> IncreaseSystemGroupCount(string id);
+        Task<bool> DecreaseSystemGroupCount(string id);
     }
 }

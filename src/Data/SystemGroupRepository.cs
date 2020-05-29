@@ -90,5 +90,32 @@ namespace openrmf_msg_system.Data {
                 throw ex;
             }
         }
+
+        // update the count of checklists by 1
+        public async Task<bool> IncreaseSystemGroupCount(string id) {
+            try {
+                var filter = Builders<SystemGroup>.Filter.Eq(s => s.InternalId, GetInternalId(id));
+                var update = Builders<SystemGroup>.Update.Inc(_ => _.numberOfChecklists, 1);
+                var actionResult = await _context.SystemGroups.UpdateOneAsync(filter, update);
+                return actionResult.IsAcknowledged && actionResult.ModifiedCount > 0;
+            }
+            catch (Exception ex) {
+                throw ex;
+            }
+        }
+
+        // decrease the count of checklists by 1
+        public async Task<bool> DecreaseSystemGroupCount(string id) {
+            try {
+                var filter = Builders<SystemGroup>.Filter.Eq(s => s.InternalId, GetInternalId(id));
+                var update = Builders<SystemGroup>.Update.Inc(_ => _.numberOfChecklists, -1);
+                var actionResult = await _context.SystemGroups.UpdateOneAsync(filter, update);
+                return actionResult.IsAcknowledged && actionResult.ModifiedCount > 0;
+            }
+            catch (Exception ex) {
+                throw ex;
+            }
+
+        }
     }
 }

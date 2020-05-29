@@ -3,9 +3,9 @@
 # openrmf-msg-system
 Messaging service to respond to internal API requests to receive system and checklist listing information using a NATS Request/Reply scenario.
 * openrmf.system.update.{systemGroupId} -- update the title in the body for the Artifacts (used for quicker reading)
-* openrmf.system.count.add -- increment the # of checklists in a system
-* openrmf.system.count.delete -- decrement the # of checklists in a system
+* openrmf.system.count.> -- increment or decrement the # of checklists in a system
 * openrmf.system.compliance -- get the last compliance generation date
+* openrmf.system -- get the system record and return it
 
 ## Running the NATS docker images
 * docker run --rm --name nats-main -p 4222:4222 -p 6222:6222 -p 8222:8222 nats:2.1.2-linux

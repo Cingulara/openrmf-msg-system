@@ -126,13 +126,14 @@ namespace openrmf_msg_system
                     // setup the database repo
                     SystemGroupRepository _systemGroupRepo = new SystemGroupRepository(s);
                     sg = _systemGroupRepo.GetSystemGroup(Encoding.UTF8.GetString(natsargs.Message.Data)).Result;
+
                     if (sg != null) {
-                        if (natsargs.Message.Subject.EndsWith(".add"))
-                            sg.numberOfChecklists = sg.numberOfChecklists + 1;
-                        else if (natsargs.Message.Subject.EndsWith(".delete"))
-                            sg.numberOfChecklists = sg.numberOfChecklists - 1;
-                        // update the date and get back to work!
-                        var result = _systemGroupRepo.UpdateSystemGroup(Encoding.UTF8.GetString(natsargs.Message.Data),sg);
+                        if (natsargs.Message.Subject.EndsWith(".add")) {
+                            var result = _systemGroupRepo.IncreaseSystemGroupCount(sg.InternalId.ToString());
+                        }
+                        else if (natsargs.Message.Subject.EndsWith(".delete")) {
+                            var myresult = _systemGroupRepo.DecreaseSystemGroupCount(sg.InternalId.ToString());
+                        }
                     } 
                     else {
                         logger.Warn("Warning: bad System Group ID when updating the checklist count {0}", Encoding.UTF8.GetString(natsargs.Message.Data));
