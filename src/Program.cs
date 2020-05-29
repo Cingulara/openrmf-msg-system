@@ -9,6 +9,8 @@ using NLog.Config;
 using openrmf_msg_system.Models;
 using openrmf_msg_system.Data;
 using MongoDB.Bson;
+using openrmf_msg_system.Classes;
+using Newtonsoft.Json;
 
 namespace openrmf_msg_system
 {
@@ -124,13 +126,14 @@ namespace openrmf_msg_system
                     // setup the database repo
                     SystemGroupRepository _systemGroupRepo = new SystemGroupRepository(s);
                     sg = _systemGroupRepo.GetSystemGroup(Encoding.UTF8.GetString(natsargs.Message.Data)).Result;
+
                     if (sg != null) {
-                        if (natsargs.Message.Subject.EndsWith(".add"))
-                            sg.numberOfChecklists = sg.numberOfChecklists + 1;
-                        else if (natsargs.Message.Subject.EndsWith(".delete"))
-                            sg.numberOfChecklists = sg.numberOfChecklists - 1;
-                        // update the date and get back to work!
-                        var result = _systemGroupRepo.UpdateSystemGroup(Encoding.UTF8.GetString(natsargs.Message.Data),sg);
+                        if (natsargs.Message.Subject.EndsWith(".add")) {
+                            var result = _systemGroupRepo.IncreaseSystemGroupCount(sg.InternalId.ToString());
+                        }
+                        else if (natsargs.Message.Subject.EndsWith(".delete")) {
+                            var myresult = _systemGroupRepo.DecreaseSystemGroupCount(sg.InternalId.ToString());
+                        }
                     } 
                     else {
                         logger.Warn("Warning: bad System Group ID when updating the checklist count {0}", Encoding.UTF8.GetString(natsargs.Message.Data));
@@ -174,14 +177,49 @@ namespace openrmf_msg_system
             };
             // openrmf.system.compliance 
 
+            EventHandler<MsgHandlerEventArgs> getSystemGroupRecord = (sender, natsargs) =>
+            {
+                try {
+                    // print the message
+                    logger.Info("NATS Msg Checklists: {0}", natsargs.Message.Subject);
+                    logger.Info("NATS Msg system data: {0}",Encoding.UTF8.GetString(natsargs.Message.Data));
+                    
+                    SystemGroup sg;
+                    // setup the MondoDB connection
+                    Settings s = new Settings();
+                    s.ConnectionString = Environment.GetEnvironmentVariable("MONGODBCONNECTION");
+                    s.Database = Environment.GetEnvironmentVariable("MONGODB");
+                    // setup the database repo
+                    SystemGroupRepository _systemGroupRepo = new SystemGroupRepository(s);
+                    sg = _systemGroupRepo.GetSystemGroup(Encoding.UTF8.GetString(natsargs.Message.Data)).Result;
+                    if (sg != null) {
+                        string msg = JsonConvert.SerializeObject(sg);
+                        // publish back out on the reply line to the calling publisher
+                        logger.Info("Sending back compressed System Group Record");
+                        c.Publish(natsargs.Message.Reply, Encoding.UTF8.GetBytes(Compression.CompressString(msg)));
+                        c.Flush(); // flush the line
+                    } 
+                    else {
+                        logger.Warn("Warning: bad System Group ID when requesting a System Group record {0}", Encoding.UTF8.GetString(natsargs.Message.Data));
+                        c.Publish(natsargs.Message.Reply, Encoding.UTF8.GetBytes(Compression.CompressString(JsonConvert.SerializeObject(new SystemGroup()))));
+                        c.Flush(); // flush the line
+                    }
+                }
+                catch (Exception ex) {
+                    // log it here
+                    logger.Error(ex, "Error updating the system group record for the Compliance Generation date {0}", Encoding.UTF8.GetString(natsargs.Message.Data));
+                }
+            };
+
             logger.Info("setting up the OpenRMF System Update on Title subscription");
             IAsyncSubscription asyncSystemChecklistTitle = c.SubscribeAsync("openrmf.system.update.>", updateSystemChecklistTitles);
             logger.Info("setting up the OpenRMF System # checklists subscription");
             IAsyncSubscription asyncSystemChecklistCount = c.SubscribeAsync("openrmf.system.count.>", updateSystemChecklistCount);
             logger.Info("setting up the OpenRMF System Compliance generation date");
             IAsyncSubscription asyncSystemComplianceDate = c.SubscribeAsync("openrmf.system.compliance", updateSystemComplianceDate);
+            logger.Info("setting up the OpenRMF System subscription");
+            IAsyncSubscription asyncSystemGroupRecord = c.SubscribeAsync("openrmf.system", getSystemGroupRecord);
         }
-
         private static ObjectId GetInternalId(string id)
         {
             ObjectId internalId;
