@@ -71,8 +71,10 @@ namespace openrmf_msg_system
                     SystemGroup sg;
                     // setup the MondoDB connection
                     Settings s = new Settings();
-                    s.ConnectionString = Environment.GetEnvironmentVariable("MONGODBCONNECTION");
-                    s.Database = Environment.GetEnvironmentVariable("MONGODB");
+                    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DBTYPE")) || Environment.GetEnvironmentVariable("DBTYPE").ToLower() == "mongo") {
+                        s.ConnectionString = Environment.GetEnvironmentVariable("DBCONNECTION");
+                        s.Database = Environment.GetEnvironmentVariable("DB");
+                    }
                     // setup the database repo for systems
                     SystemGroupRepository _systemGroupRepo = new SystemGroupRepository(s);
                     // setup the database repo for the Artifacts to cycle through
@@ -121,8 +123,10 @@ namespace openrmf_msg_system
                     SystemGroup sg;
                     // setup the MondoDB connection
                     Settings s = new Settings();
-                    s.ConnectionString = Environment.GetEnvironmentVariable("MONGODBCONNECTION");
-                    s.Database = Environment.GetEnvironmentVariable("MONGODB");
+                    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DBTYPE")) || Environment.GetEnvironmentVariable("DBTYPE").ToLower() == "mongo") {
+                        s.ConnectionString = Environment.GetEnvironmentVariable("DBCONNECTION");
+                        s.Database = Environment.GetEnvironmentVariable("DB");
+                    }
                     // setup the database repo
                     SystemGroupRepository _systemGroupRepo = new SystemGroupRepository(s);
                     sg = _systemGroupRepo.GetSystemGroup(Encoding.UTF8.GetString(natsargs.Message.Data)).Result;
@@ -156,8 +160,10 @@ namespace openrmf_msg_system
                     SystemGroup sg;
                     // setup the MondoDB connection
                     Settings s = new Settings();
-                    s.ConnectionString = Environment.GetEnvironmentVariable("MONGODBCONNECTION");
-                    s.Database = Environment.GetEnvironmentVariable("MONGODB");
+                    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DBTYPE")) || Environment.GetEnvironmentVariable("DBTYPE").ToLower() == "mongo") {
+                        s.ConnectionString = Environment.GetEnvironmentVariable("DBCONNECTION");
+                        s.Database = Environment.GetEnvironmentVariable("DB");
+                    }
                     // setup the database repo
                     SystemGroupRepository _systemGroupRepo = new SystemGroupRepository(s);
                     sg = _systemGroupRepo.GetSystemGroup(Encoding.UTF8.GetString(natsargs.Message.Data)).Result;
@@ -187,8 +193,10 @@ namespace openrmf_msg_system
                     SystemGroup sg;
                     // setup the MondoDB connection
                     Settings s = new Settings();
-                    s.ConnectionString = Environment.GetEnvironmentVariable("MONGODBCONNECTION");
-                    s.Database = Environment.GetEnvironmentVariable("MONGODB");
+                    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DBTYPE")) || Environment.GetEnvironmentVariable("DBTYPE").ToLower() == "mongo") {
+                        s.ConnectionString = Environment.GetEnvironmentVariable("DBCONNECTION");
+                        s.Database = Environment.GetEnvironmentVariable("DB");
+                    }
                     // setup the database repo
                     SystemGroupRepository _systemGroupRepo = new SystemGroupRepository(s);
                     sg = _systemGroupRepo.GetSystemGroup(Encoding.UTF8.GetString(natsargs.Message.Data)).Result;
