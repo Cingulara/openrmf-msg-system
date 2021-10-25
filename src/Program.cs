@@ -201,6 +201,7 @@ namespace openrmf_msg_system
                     SystemGroupRepository _systemGroupRepo = new SystemGroupRepository(s);
                     sg = _systemGroupRepo.GetSystemGroup(Encoding.UTF8.GetString(natsargs.Message.Data)).Result;
                     if (sg != null) {
+                        sg.rawNessusFile = "";
                         string msg = JsonConvert.SerializeObject(sg);
                         // publish back out on the reply line to the calling publisher
                         logger.Info("Sending back compressed System Group Record");
