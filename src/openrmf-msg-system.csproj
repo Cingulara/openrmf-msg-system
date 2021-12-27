@@ -5,7 +5,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>openrmf_msg_system</RootNamespace>
     <ProjectGuid>{a6cadbeb-b8ca-4274-95e1-3a465b6c205d}</ProjectGuid>
-    <Version>1.06.00</Version>
+    <Version>1.07.00</Version>
     <InformationalVersion>This is the OpenRMF Tool Messaging API for updating system records via messaging from Cingulara</InformationalVersion>
   </PropertyGroup>
 

@@ -21,5 +21,13 @@ namespace openrmf_msg_system.Data
                 return _database.GetCollection<Artifact>("Artifacts");
             }
         }
+
+        public IMongoCollection<SystemGroup> SystemGroups
+        {
+            get
+            {
+                return _database.GetCollection<SystemGroup>("SystemGroups");
+            }
+        }
     }
 }

@@ -10,11 +10,11 @@ using MongoDB.Bson;
 namespace openrmf_msg_system.Data {
     public class SystemGroupRepository : ISystemGroupRepository
     {
-        private readonly SystemGroupContext _context = null;
+        private readonly ArtifactContext _context = null;
 
         public SystemGroupRepository(Settings settings)
         {
-            _context = new SystemGroupContext(settings);
+            _context = new ArtifactContext(settings);
         }
 
         public async Task<IEnumerable<SystemGroup>> GetAllSystemGroups()
