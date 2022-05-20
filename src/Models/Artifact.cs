@@ -27,6 +27,8 @@ namespace openrmf_msg_system.Models
             return hostName.Trim() + "-" + stigType.Trim() + "-V" + version + "-" + stigRelease.Trim();
         }}
 
+        public CHECKLIST CHECKLIST { get; set; }
+        
         public string rawChecklist { get; set; }
         
         [BsonId]
