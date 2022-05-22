@@ -21,6 +21,35 @@ namespace openrmf_msg_system
             LogManager.Configuration = new XmlLoggingConfiguration($"{AppContext.BaseDirectory}nlog.config");
 
             var logger = LogManager.GetLogger("openrmf_msg_system");
+            if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("LOGLEVEL"))) // default
+                LogManager.Configuration.Variables["logLevel"] = "Warn";
+            else if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("LOGLEVEL"))) {
+                switch (Environment.GetEnvironmentVariable("LOGLEVEL"))
+                {
+                    case "5":
+                        LogManager.Configuration.Variables["logLevel"] = "Critical";
+                        break;
+                    case "4":
+                        LogManager.Configuration.Variables["logLevel"] = "Error";
+                        break;
+                    case "3":
+                        LogManager.Configuration.Variables["logLevel"] = "Warn";
+                        break;
+                    case "2":
+                        LogManager.Configuration.Variables["logLevel"] = "Info";
+                        break;
+                    case "1":
+                        LogManager.Configuration.Variables["logLevel"] = "Debug";
+                        break;
+                    case "0":
+                        LogManager.Configuration.Variables["logLevel"] = "Trace";
+                        break;
+                    default:
+                        LogManager.Configuration.Variables["logLevel"] = "Warn";
+                        break;
+                }
+            }
+            LogManager.ReconfigExistingLoggers();
             
             // Create a new connection factory to create a connection.
             ConnectionFactory cf = new ConnectionFactory();
@@ -220,6 +249,75 @@ namespace openrmf_msg_system
                 }
             };
 
+
+            // send back a checklist based on an individual ID
+            EventHandler<MsgHandlerEventArgs> readChecklist = (sender, natsargs) =>
+            {
+                try {
+                    // print the message
+                    logger.Info("New NATS subject: {0}", natsargs.Message.Subject);
+                    logger.Info("New NATS data: {0}",Encoding.UTF8.GetString(natsargs.Message.Data));
+                    
+                    Artifact art = new Artifact();
+                    // setup the MongoDB connection
+                    Settings s = new Settings();
+                    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DBTYPE")) || Environment.GetEnvironmentVariable("DBTYPE").ToLower() == "mongo") {
+                        s.ConnectionString = Environment.GetEnvironmentVariable("DBCONNECTION");
+                        s.Database = Environment.GetEnvironmentVariable("DB");
+                    }
+                    // setup the MongoDB repo connection
+                    ArtifactRepository _artifactRepo = new ArtifactRepository(s);
+                    art = _artifactRepo.GetArtifact(Encoding.UTF8.GetString(natsargs.Message.Data)).Result;
+                    // when you serialize the \\ slash JSON chokes, so replace and regular \\ with 4 \\\\
+                    art.rawChecklist = art.rawChecklist.Replace("\\","\\\\");
+                    // now serialize the class into a string to compress and send
+                    string msg = JsonConvert.SerializeObject(art);
+                    // publish back out on the reply line to the calling publisher
+                    logger.Info("Sending back compressed Checklist Data");
+                    c.Publish(natsargs.Message.Reply, Encoding.UTF8.GetBytes(Compression.CompressString(msg)));
+                    c.Flush(); // flush the line
+                }
+                catch (Exception ex) {
+                    // log it here
+                    logger.Error(ex, "Error retrieving checklist record for artifactId {0}", Encoding.UTF8.GetString(natsargs.Message.Data));
+                }
+            };
+
+            // send back a checklist listing based on the system ID
+            EventHandler<MsgHandlerEventArgs> readSystemChecklists = (sender, natsargs) =>
+            {
+                try {
+                    // print the message
+                    logger.Info("NATS Msg Checklists: {0}", natsargs.Message.Subject);
+                    logger.Info("NATS Msg system data: {0}",Encoding.UTF8.GetString(natsargs.Message.Data));
+                    
+                    IEnumerable<Artifact> arts;
+                    // setup the MondoDB connection
+                    Settings s = new Settings();
+                    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DBTYPE")) || Environment.GetEnvironmentVariable("DBTYPE").ToLower() == "mongo") {
+                        s.ConnectionString = Environment.GetEnvironmentVariable("DBCONNECTION");
+                        s.Database = Environment.GetEnvironmentVariable("DB");
+                    }
+                    // setup the database repo
+                    ArtifactRepository _artifactRepo = new ArtifactRepository(s);
+                    arts = _artifactRepo.GetSystemArtifacts(Encoding.UTF8.GetString(natsargs.Message.Data)).Result;
+                    // remove the rawChecklist as we do not need all that data, just the main metadata for listing
+                    foreach(Artifact a in arts) {
+                        a.rawChecklist = "";
+                    }
+                    // now publish it back out w/ the reply subject
+                    string msg = JsonConvert.SerializeObject(arts);
+                    // publish back out on the reply line to the calling publisher
+                    logger.Info("Sending back compressed Checklist Data");
+                    c.Publish(natsargs.Message.Reply, Encoding.UTF8.GetBytes(Compression.CompressString(msg)));
+                    c.Flush(); // flush the line
+                }
+                catch (Exception ex) {
+                    // log it here
+                    logger.Error(ex, "Error retrieving checklist record for artifactId {0}", Encoding.UTF8.GetString(natsargs.Message.Data));
+                }
+            };
+            
             logger.Info("setting up the OpenRMF System Update on Title subscription");
             IAsyncSubscription asyncSystemChecklistTitle = c.SubscribeAsync("openrmf.system.update.>", updateSystemChecklistTitles);
             logger.Info("setting up the OpenRMF System # checklists subscription");
@@ -228,6 +326,13 @@ namespace openrmf_msg_system
             IAsyncSubscription asyncSystemComplianceDate = c.SubscribeAsync("openrmf.system.compliance", updateSystemComplianceDate);
             logger.Info("setting up the OpenRMF System subscription");
             IAsyncSubscription asyncSystemGroupRecord = c.SubscribeAsync("openrmf.system", getSystemGroupRecord);
+
+            // moved from the msg checklist in v1.8
+
+            logger.Info("setting up the openRMF checklist subscription");
+            IAsyncSubscription asyncNew = c.SubscribeAsync("openrmf.checklist.read", readChecklist);
+            logger.Info("setting up the openRMF system checklist listing subscription");
+            IAsyncSubscription asyncNewSystemChecklists = c.SubscribeAsync("openrmf.system.checklists.read", readSystemChecklists);
         }
         private static ObjectId GetInternalId(string id)
         {
