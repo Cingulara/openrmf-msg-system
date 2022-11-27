@@ -1,4 +1,4 @@
-VERSION ?= 1.08.01
+VERSION ?= 1.08.03
 NAME ?= "openrmf-msg-system"
 AUTHOR ?= "Dale Bingham"
 NO_CACHE ?= true

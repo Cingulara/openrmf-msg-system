@@ -7,7 +7,8 @@ using System.Threading.Tasks;
 using MongoDB.Driver;
 using MongoDB.Bson;
 
-namespace openrmf_msg_system.Data {
+namespace openrmf_msg_system.Data
+{
     public class SystemGroupRepository : ISystemGroupRepository
     {
         private readonly ArtifactContext _context = null;
@@ -19,16 +20,8 @@ namespace openrmf_msg_system.Data {
 
         public async Task<IEnumerable<SystemGroup>> GetAllSystemGroups()
         {
-            try
-            {
-                return await _context.SystemGroups
-                        .Find(_ => true).ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                // log or manage the exception
-                throw ex;
-            }
+            return await _context.SystemGroups
+                    .Find(_ => true).ToListAsync();
         }
 
         private ObjectId GetInternalId(string id)
@@ -39,83 +32,50 @@ namespace openrmf_msg_system.Data {
 
             return internalId;
         }
-        
+
         // query after Id or InternalId (BSonId value)
         //
         public async Task<SystemGroup> GetSystemGroup(string id)
         {
-            try
-            {
-                ObjectId internalId = GetInternalId(id);
-                return await _context.SystemGroups
-                                .Find(SystemGroup => SystemGroup.InternalId == internalId).FirstOrDefaultAsync();
-            }
-            catch (Exception ex)
-            {
-                // log or manage the exception
-                throw ex;
-            }
+            ObjectId internalId = GetInternalId(id);
+            return await _context.SystemGroups
+                            .Find(SystemGroup => SystemGroup.InternalId == internalId).FirstOrDefaultAsync();
         }
-        
+
         public async Task<bool> RemoveSystemGroup(string id)
         {
-            try
-            {
-                DeleteResult actionResult 
-                    = await _context.SystemGroups.DeleteOneAsync(
-                        Builders<SystemGroup>.Filter.Eq("Id", id));
+            DeleteResult actionResult
+                = await _context.SystemGroups.DeleteOneAsync(
+                    Builders<SystemGroup>.Filter.Eq("Id", id));
 
-                return actionResult.IsAcknowledged 
-                    && actionResult.DeletedCount > 0;
-            }
-            catch (Exception ex)
-            {
-                // log or manage the exception
-                throw ex;
-            }
+            return actionResult.IsAcknowledged
+                && actionResult.DeletedCount > 0;
         }
 
         public async Task<bool> UpdateSystemGroup(string id, SystemGroup body)
         {
             var filter = Builders<SystemGroup>.Filter.Eq(s => s.InternalId, GetInternalId(id));
-            try
-            {
-                body.InternalId = GetInternalId(id);
-                var actionResult = await _context.SystemGroups.ReplaceOneAsync(filter, body);
-                return actionResult.IsAcknowledged && actionResult.ModifiedCount > 0;
-            }
-            catch (Exception ex)
-            {
-                // log or manage the exception
-                throw ex;
-            }
+            body.InternalId = GetInternalId(id);
+            var actionResult = await _context.SystemGroups.ReplaceOneAsync(filter, body);
+            return actionResult.IsAcknowledged && actionResult.ModifiedCount > 0;
         }
 
         // update the count of checklists by 1
-        public async Task<bool> IncreaseSystemGroupCount(string id) {
-            try {
-                var filter = Builders<SystemGroup>.Filter.Eq(s => s.InternalId, GetInternalId(id));
-                var update = Builders<SystemGroup>.Update.Inc(_ => _.numberOfChecklists, 1);
-                var actionResult = await _context.SystemGroups.UpdateOneAsync(filter, update);
-                return actionResult.IsAcknowledged && actionResult.ModifiedCount > 0;
-            }
-            catch (Exception ex) {
-                throw ex;
-            }
+        public async Task<bool> IncreaseSystemGroupCount(string id)
+        {
+            var filter = Builders<SystemGroup>.Filter.Eq(s => s.InternalId, GetInternalId(id));
+            var update = Builders<SystemGroup>.Update.Inc(_ => _.numberOfChecklists, 1);
+            var actionResult = await _context.SystemGroups.UpdateOneAsync(filter, update);
+            return actionResult.IsAcknowledged && actionResult.ModifiedCount > 0;
         }
 
         // decrease the count of checklists by 1
-        public async Task<bool> DecreaseSystemGroupCount(string id) {
-            try {
-                var filter = Builders<SystemGroup>.Filter.Eq(s => s.InternalId, GetInternalId(id));
-                var update = Builders<SystemGroup>.Update.Inc(_ => _.numberOfChecklists, -1);
-                var actionResult = await _context.SystemGroups.UpdateOneAsync(filter, update);
-                return actionResult.IsAcknowledged && actionResult.ModifiedCount > 0;
-            }
-            catch (Exception ex) {
-                throw ex;
-            }
-
+        public async Task<bool> DecreaseSystemGroupCount(string id)
+        {
+            var filter = Builders<SystemGroup>.Filter.Eq(s => s.InternalId, GetInternalId(id));
+            var update = Builders<SystemGroup>.Update.Inc(_ => _.numberOfChecklists, -1);
+            var actionResult = await _context.SystemGroups.UpdateOneAsync(filter, update);
+            return actionResult.IsAcknowledged && actionResult.ModifiedCount > 0;
         }
     }
 }

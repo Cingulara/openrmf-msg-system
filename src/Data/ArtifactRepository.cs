@@ -8,7 +8,8 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using System.Linq;
 
-namespace openrmf_msg_system.Data {
+namespace openrmf_msg_system.Data
+{
     public class ArtifactRepository : IArtifactRepository
     {
         private readonly ArtifactContext _context = null;
@@ -31,45 +32,21 @@ namespace openrmf_msg_system.Data {
         //
         public async Task<Artifact> GetArtifact(string id)
         {
-            try
-            {
-                return await _context.Artifacts.Find(artifact => artifact.InternalId == GetInternalId(id)).FirstOrDefaultAsync();
-            }
-            catch (Exception ex)
-            {
-                // log or manage the exception
-                throw ex;
-            }
+            return await _context.Artifacts.Find(artifact => artifact.InternalId == GetInternalId(id)).FirstOrDefaultAsync();
         }
 
         public async Task<IEnumerable<Artifact>> GetSystemArtifacts(string systemGroupId)
         {
-            try
-            {
-                var query = await _context.Artifacts.FindAsync(artifact => artifact.systemGroupId == systemGroupId);
-                return query.ToList().OrderBy(x => x.title);
-            }
-            catch (Exception ex)
-            {
-                // log or manage the exception
-                throw ex;
-            }
+            var query = await _context.Artifacts.FindAsync(artifact => artifact.systemGroupId == systemGroupId);
+            return query.ToList().OrderBy(x => x.title);
         }
 
         public async Task<bool> UpdateArtifact(string id, Artifact body)
         {
             var filter = Builders<Artifact>.Filter.Eq(s => s.InternalId, GetInternalId(id));
-            try
-            {
-                body.InternalId = GetInternalId(id);
-                var actionResult = await _context.Artifacts.ReplaceOneAsync(filter, body);
-                return actionResult.IsAcknowledged && actionResult.ModifiedCount > 0;
-            }
-            catch (Exception ex)
-            {
-                // log or manage the exception
-                throw ex;
-            }
+            body.InternalId = GetInternalId(id);
+            var actionResult = await _context.Artifacts.ReplaceOneAsync(filter, body);
+            return actionResult.IsAcknowledged && actionResult.ModifiedCount > 0;
         }
     }
 }
