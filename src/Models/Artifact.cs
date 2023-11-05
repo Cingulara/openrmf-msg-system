@@ -24,7 +24,13 @@ namespace openrmf_msg_system.Models
         public string stigRelease { get; set; }
         public string version {get; set;}
         public string title { get {
-            return hostName.Trim() + "-" + stigType.Trim() + "-V" + version + "-" + stigRelease.Trim();
+            string validHostname = !string.IsNullOrEmpty(hostName)? hostName.Trim() : "Unknown";
+            string validStigType = "";
+            if (!string.IsNullOrWhiteSpace(stigType)) validStigType = stigType.Trim();
+            string validStigRelease = "";
+            if (!string.IsNullOrWhiteSpace(stigRelease)) validStigRelease = stigRelease.Trim();
+
+            return validHostname + "-" + validStigType + "-V" + version + "-" + validStigRelease;
         }}
 
         public CHECKLIST CHECKLIST { get; set; }
