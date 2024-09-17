@@ -11,7 +11,9 @@ namespace openrmf_msg_system.Models
     public class Artifact
     {
         public Artifact () {
-
+            isWebDatabase = false;
+            webDatabaseSite = "";
+            webDatabaseInstance = "";
         }
 
         public DateTime created { get; set; }
@@ -51,5 +53,10 @@ namespace openrmf_msg_system.Models
 
         // v1.7
         public List<string> tags {get; set;}
+
+        // v1.12
+        public bool isWebDatabase { get; set; }
+        public string webDatabaseSite { get; set; }
+        public string webDatabaseInstance { get; set; }
     }
 }
